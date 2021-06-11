@@ -1,0 +1,72 @@
+pragma solidity ^0.4.26;
+
+import './owned.sol';//Inherit the contract
+import './erc20.sol';//Inherit the contract
+
+//Construct a senior contract that includes the ability to issue new tokens, freeze accounts, and destroy tokens
+contract AdvanceToken is ERC20, owned {
+    mapping (address => bool) public frozenAccount;
+    event AddSupply(uint amount);//Define secondary issue events
+    event FrozenFunds(address target, bool frozen);//Define frozen account events
+    event Burn(address target, uint amount);//Define Token Destruction Event
+    constructor (string _name) ERC20(_name) public {
+    }
+
+    //Defines the function of mining, that is, the function of adding tokens
+    function mine(address target, uint amount) public onlyOwner {
+        totalSupply += amount;//Modify total circulation, amount is the number of mines
+        balanceOf[target] += amount;//The amount of additional issuance is added to the initial balance
+        emit AddSupply(amount);//Trigger the event
+        emit Transfer(0, target, amount);//Trigger the event
+    }
+
+    //Define a freeze function that prevents the account from transferring money
+    function freezeAccount(address target, bool freeze) public onlyOwner {
+        frozenAccount[target] = freeze;
+        emit FrozenFunds(target, freeze);//Trigger the event
+    }
+
+  //A function that defines whether the transfer receiver has received the token
+  function transfer(address _to, uint256 _value) public returns (bool success) {
+        success = _transfer(msg.sender, _to, _value);
+  }
+
+  //A function that defines whether the transfer sender's function issues a token
+  function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+        require(allowed[_from][msg.sender] >= _value);//Verify that the sending account exists
+        success =  _transfer(_from, _to, _value);
+        allowed[_from][msg.sender] -= _value;
+  }
+
+  //Defines a function for the transfer receiver to receive tokens
+  function _transfer(address _from, address _to, uint256 _value) internal returns (bool) {
+      require(_to != address(0));//Verify that the recipient account exists
+      require(!frozenAccount[_from]);//Make sure the transfer account is not blocked
+      require(balanceOf[_from] >= _value);//Confirm if the balance is sufficient to meet the consignment quantity
+      require(balanceOf[ _to] + _value >= balanceOf[ _to]);//Verify that there is no overflow
+      balanceOf[_from] -= _value;//The token issuer's balance is reduced by _value
+      balanceOf[_to] += _value;//The token recipient's balance increases by _value
+      emit Transfer(_from, _to, _value);//Trigger the event
+      return true;
+  }
+
+    //Define the destroy token function
+    function burn(uint256 _value) public returns (bool success) {
+        require(balanceOf[msg.sender] >= _value);//Check if there is enough balance to destroy
+        totalSupply -= _value;//Circulation decreases _value
+        balanceOf[msg.sender] -= _value;//The amount of decrease in the account balance is _value
+        emit Burn(msg.sender, _value);//Trigger a Token Destruction event
+        return true;
+    }
+
+    //Define the entrusted token destruction function, the issuer can entrust other people to perform the destruction of the token operation
+    function burnFrom(address _from, uint256 _value)  public returns (bool success) {
+        require(balanceOf[_from] >= _value);//Verify that the entrusted account has sufficient balance
+        require(allowed[_from][msg.sender] >= _value);//Verify that the amount of authorization is sufficient
+        totalSupply -= _value;//The amount of circulation decreased is _value
+        balanceOf[msg.sender] -= _value;//And the balance of the entrusted account minus _value
+        allowed[_from][msg.sender] -= _value;//The amount of authorization minus _value
+        emit Burn(msg.sender, _value);//Trigger a Token Destruction event
+        return true;
+    }
+}

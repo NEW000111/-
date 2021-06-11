@@ -1,0 +1,15 @@
+pragma solidity ^0.4.26;
+
+//Define a simple contract
+contract ERC20Interface {
+  string public name;//Define the token name
+  string public symbol;//Define token symbol
+  uint8 public  decimals;//The decimal place that defines the fewest units of token transaction
+  uint public totalSupply;//Define the amount of tokens issued
+  function transfer(address _to, uint256 _value) returns (bool success);//The transfer function
+  function transferFrom(address _from, address _to, uint256 _value) returns (bool success);//Once an agent has access to a token delegate, it can transfer tokens from _from's address (the principal's address) to another person's address
+  function approve(address _spender, uint256 _value) returns (bool success);//The management authority of the delegated asset, _spender, is the address of the delegated asset and _value is the limit of the delegated asset
+  function allowance(address _owner, address _spender) view returns (uint256 remaining);//The amount of delegated quotas
+  event Transfer(address indexed _from, address indexed _to, uint256 _value);//Trigger Transfer Event
+  event Approval(address indexed _owner, address indexed _spender, uint256 _value);//Trigger authorization events
+}

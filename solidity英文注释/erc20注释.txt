@@ -1,0 +1,55 @@
+pragma solidity ^0.4.26;
+
+import './erc20interface.sol';//Inheritance file
+
+//Define a contract that contains the underlying information
+contract ERC20 is ERC20Interface {
+    mapping(address => uint256) public balanceOf;//Mapping the balance
+    mapping(address => mapping(address => uint256)) allowed;//Mapping Authorization Behavior
+    
+    //Define the constructor of the contract
+    constructor(string _name) public {
+       name = _name;  // "SickleCoin";//Define the token name
+       symbol = "SIC";//Define the token symbol
+       decimals = 2;//Define the number of decimal places, i.e., the smallest trading volume is 0.01SIC
+       totalSupply = 1000000000000;//Define circulation
+       balanceOf[msg.sender] = totalSupply;//Define balance as total circulation
+    }
+    
+   //Define a transfer receiving function
+  function transfer(address _to, uint256 _value) returns (bool success) {
+      require(_to != address(0));//Verify that the target account cannot be empty
+      require(balanceOf[msg.sender] >= _value);//The token sender needs to have a sufficient balance
+      require(balanceOf[ _to] + _value >= balanceOf[ _to]);//Check for overflows, where the balance of the party receiving the token is greater than or equal to the original balance
+      balanceOf[msg.sender] -= _value;//The token sender's balance decreases
+      balanceOf[_to] += _value;//The balance of the party receiving the token increases
+      emit Transfer(msg.sender, _to, _value);//Trigger Transfer Event
+      return true;
+  }
+  
+  //Defines the function to be emitted by the principal transfer
+  function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+      require(_to != address(0));//The sending account cannot be empty
+      require(allowed[_from][msg.sender] >= _value);//Confirm that the client needs to have the authorized amount to pay the transfer. The authorized amount is greater than or equal to the amount transferred
+      require(balanceOf[_from] >= _value);//At the same time, the total balance of the client must be greater than or equal to the amount transferred
+      require(balanceOf[ _to] + _value >= balanceOf[ _to]);//Check for overflow
+      balanceOf[_from] -= _value;//Issuer balance reduced
+      balanceOf[_to] += _value;//Receiver balance increased
+      allowed[_from][msg.sender] -= _value;//The authorized person's total authorization is reduced by transferring money
+      emit Transfer(msg.sender, _to, _value);//Trigger the entrusted transfer event
+      return true;
+  }
+  
+  //Defines a function that authorizes behavior
+  function approve(address _spender, uint256 _value) returns (bool success) {
+      allowed[msg.sender][_spender] = _value;//Authorize a certain amount to the entrusted account
+      emit Approval(msg.sender, _spender, _value);//trigger event
+      return true;
+  }
+  
+  //Defines a function for the delegate amount
+  function allowance(address _owner, address _spender) view returns (uint256 remaining) {
+      return allowed[_owner][_spender];//Return Authorization Limit
+  }
+
+}

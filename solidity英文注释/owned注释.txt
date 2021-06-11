@@ -1,0 +1,21 @@
+pragma solidity ^0.4.26;
+//Define a manager contract that enables the manager to issue additional authority and transfer authority to others
+contract owned {
+    address public owner;    
+
+    //Set permissions so that only the owner can call transferOwnerShip. The constructor saves the address at which the contract was created.
+    constructor () public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);//Determine whether the caller is the issuer
+        _;
+    }
+
+    //Define transfer functions that only onlyOwner can call, and onlyOwner can transfer permissions to Newower
+    function transferOwnerShip(address newOwer) public onlyOwner {
+        owner = newOwer;
+    }
+
+}

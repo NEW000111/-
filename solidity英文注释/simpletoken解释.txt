@@ -1,0 +1,21 @@
+pragma solidity ^0.4.26;
+
+//Construct a simple contract
+contract  simpletoken{   
+    mapping(address => uint256) public balanceOf;//Mapping the balance
+    event Transfer(address indexed receiver, uint256 value );//Define the event
+
+    //Set initial supply
+    constructor (uint256 initialSupply) {
+        balanceOf[msg.sender] = initialSupply;
+    }
+    
+    //Define the transfer function
+    function transfer(address _to, uint256 _value) public {//_to is who to go to, _values is how much to go to
+        require(balanceOf[msg.sender] >= _value);//You need to check that your account has sufficient balance before you transfer money
+        require(balanceOf[_to] + _value >= balanceOf[_to]);//Check for overflow
+        balanceOf[msg.sender] -= _value;//The token issuer's balance increases
+        balanceOf[_to] += _value;//Receiver balance increased
+        emit Transfer( _to, _value);//Trigger the event
+    }
+}
